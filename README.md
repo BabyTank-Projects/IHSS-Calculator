@@ -172,7 +172,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - **CRITICAL FIX**: Excel export now works in the .exe (no more "Missing Library" error!)
 - **FIXED**: openpyxl library now properly bundled in executable
 - **FIXED**: Updated build scripts with --hidden-import flags
-- **NEW**: CSV fallback option if Excel export fails
 - All features from v1.1.0 now fully functional in the executable
 - Users can now export beautiful Excel files with no installation required!
 
