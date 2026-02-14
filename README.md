@@ -28,9 +28,15 @@ A modern, dark-themed calendar application for IHSS (In-Home Supportive Services
 - Custom weekly hour override option
 
 ### 💾 Export & Screenshot
-- Export timesheets to CSV format
+- Export timesheets to beautifully formatted **Excel files (.xlsx)** with:
+  - 🎨 Professional colors and styling
+  - 📊 Clean, easy-to-read layout
+  - ⏰ **Work Time Calculator data included** (start/end times when used)
+  - 📈 Alternating row colors for better readability
+  - 🖨️ Print-ready formatting
 - Take screenshots of calendar for visual reference
 - Timestamped filenames for easy organization
+- **Files automatically saved to your Documents folder**
 
 ### 🎨 Modern UI
 - Dark theme (easy on the eyes)
@@ -62,7 +68,7 @@ A modern, dark-themed calendar application for IHSS (In-Home Supportive Services
 git clone https://github.com/yourusername/ihss-calendar.git
 cd ihss-calendar
 
-# Install dependencies
+# Install dependencies (includes Pillow for screenshots and openpyxl for Excel export)
 pip install -r requirements.txt
 
 # Run the application
@@ -103,8 +109,16 @@ The executable will be created in the `dist/` folder.
 3. End times appear below daily hours in the calendar
 
 ### Exporting Data
-- **CSV Export**: Click "Export CSV" to save timesheet data
+- **Excel Export**: Click "Export Excel" to save a professionally formatted timesheet
+  - Beautiful color-coded headers (blue) and totals (green)
+  - Alternating row colors for easy reading
+  - If you use the **Work Time Calculator**, start and end times are automatically included in the export!
+  - Files are saved to your **Documents** folder
+  - Filename includes date and pay period for easy organization
+  - Opens perfectly in Microsoft Excel, Google Sheets, LibreOffice, or Numbers
 - **Screenshot**: Click "Screenshot" to capture calendar image
+  - Images saved to your **Documents** folder
+  - Useful for visual reference when filling out official forms
 
 ### Input Formats
 Hours can be entered as:
@@ -115,10 +129,13 @@ Hours can be entered as:
 ## Tips
 
 ✅ Always verify your schedule matches actual hours worked  
-✅ Use Export CSV to keep records of your timesheets  
+✅ Use Export Excel to get beautifully formatted timesheets with professional colors  
+✅ If you use the Work Time Calculator, your start/end times will be included in the Excel export  
 ✅ Use Screenshot for visual reference when filling out official forms  
 ✅ Weekly maximum calculations are helpers - follow official IHSS guidelines  
 ✅ You can mix manual entry with auto-fill by clearing specific days  
+✅ Exported files are saved to your Documents folder for easy access
+✅ Excel files open in Excel, Google Sheets, LibreOffice, or Numbers
 
 ## Technical Details
 
@@ -126,6 +143,7 @@ Hours can be entered as:
 - Python 3.x
 - Tkinter (GUI framework)
 - Pillow (screenshot functionality)
+- openpyxl (Excel file generation with formatting)
 
 **Compatible with:**
 - Windows 10/11
@@ -150,7 +168,30 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
 
-### Version 2.0.0 (Latest)
+### Version 3.0.0 (Latest) - Excel Export Fixed!
+- **CRITICAL FIX**: Excel export now works in the .exe (no more "Missing Library" error!)
+- **FIXED**: openpyxl library now properly bundled in executable
+- **FIXED**: Updated build scripts with --hidden-import flags
+- **NEW**: CSV fallback option if Excel export fails
+- All features from v1.1.0 now fully functional in the executable
+- Users can now export beautiful Excel files with no installation required!
+
+### Version 1.1.0 - Beautiful Excel Export!
+- **NEW**: Export to Excel (.xlsx) instead of CSV with beautiful formatting
+- **NEW**: Professional color scheme - blue headers, green totals, alternating gray rows
+- **NEW**: Work Time Calculator data automatically included in exports (start/end times)
+- Clean, print-ready layout perfect for record-keeping
+- Better readability with styled columns and borders
+- Added openpyxl dependency for Excel generation
+
+### Version 1.0.2 - File Export Fix
+- **CRITICAL FIX**: Export CSV and Screenshot now save to Documents folder
+- Fixed permission denied errors when running as executable
+- Files no longer try to save to protected system directories
+- Added robust fallback logic for finding writable directories
+- Better error messages showing exact save location
+
+### Version 1.0.1
 - **CRITICAL FIX**: Calendar now correctly displays days under proper weekday headers
 - Fixed workday selection labels (Su, M, Tu, W, Th, F, Sa)
 - Improved calendar cell sizing and spacing
@@ -164,6 +205,32 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - CSV export and screenshot features
 - Dark theme UI
 - Comprehensive help system
+
+## Troubleshooting
+
+**Q: Getting "Missing Library" error when exporting?**  
+A: Download the latest version (**v3.0.0**). The library is now included in the .exe - no installation needed!
+
+**Q: Getting "Permission denied" errors when exporting?**  
+A: Make sure you're using version 1.0.2 or later. Files now save to your Documents folder automatically.
+
+**Q: Where do my exported files go?**  
+A: Excel exports and screenshots are saved to:
+- **Windows**: `C:\Users\[YourName]\Documents`
+- **Mac**: `/Users/[YourName]/Documents`
+- **Linux**: `/home/[YourName]/Documents`
+
+**Q: Can I open the Excel files in Google Sheets?**  
+A: Yes! The .xlsx files work perfectly in Microsoft Excel, Google Sheets, LibreOffice Calc, and Apple Numbers.
+
+**Q: "Windows protected your PC" warning**  
+A: Click "More info" → "Run anyway". This is normal for unsigned executables.
+
+**Q: I'm running from Python source - "Missing Library" error?**  
+A: Install the required libraries: `pip install openpyxl Pillow`
+
+**Q: CSV export instead of Excel?**  
+A: If you choose CSV fallback, it still includes all your data and Work Time Calculator info, just without the colors.
 
 ---
 
