@@ -1,17 +1,23 @@
 @echo off
 REM Build script for IHSS Calendar Generator (Windows)
+REM Uses python -m pip instead of pip directly for better compatibility
 
 echo Installing dependencies...
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 echo Installing PyInstaller...
-pip install pyinstaller
+python -m pip install pyinstaller
 
 echo Building executable...
-pyinstaller --onefile ^
+python -m PyInstaller --onefile ^
     --windowed ^
     --name "IHSS_Calendar_Generator" ^
     --icon=NONE ^
+    --hidden-import=openpyxl ^
+    --hidden-import=openpyxl.styles ^
+    --hidden-import=openpyxl.utils ^
+    --hidden-import=PIL ^
+    --hidden-import=PIL.ImageGrab ^
     --add-data "requirements.txt;." ^
     ihsscalculator_enhanced.py
 
