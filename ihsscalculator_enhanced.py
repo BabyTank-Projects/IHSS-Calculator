@@ -178,7 +178,7 @@ These checkboxes are helpers for calculating weekly maximum hours:
 • Override: Manually set a custom weekly maximum if you have special authorization
 
 WORKDAYS SELECTION
-Check the days you typically work (Sun-Sat). If you leave all unchecked, the system assumes you work every day. This affects auto-fill distribution.
+Check the days you typically work (Su=Sunday, M=Monday, Tu=Tuesday, W=Wednesday, Th=Thursday, F=Friday, Sa=Saturday). If you leave all unchecked, the system assumes you work every day. This affects auto-fill distribution.
 
 USE WHOLE HOURS
 When checked, the auto-fill feature will try to assign whole hours (8:00, 7:00, etc.) instead of fractional hours (7:30, 6:45), with any leftover minutes concentrated on one day for cleaner scheduling.
@@ -483,12 +483,14 @@ class OvertimeCalendarApp:
         days_frame = ttk.Frame(settings)
         days_frame.grid(row=10, column=0, sticky="w", pady=(0, 5))
         
-        days = ["S", "M", "T", "W", "T", "F", "S"]
+        days = ["Su", "M", "Tu", "W", "Th", "F", "Sa"]
         day_full = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         for i, (d, full) in enumerate(zip(days, day_full)):
-            btn = ttk.Checkbutton(days_frame, text=d, width=2,
+            btn = ttk.Checkbutton(days_frame, text=d, width=3,
                                  variable=self.workday_vars[i])
             btn.pack(side="left", padx=2)
+            # Create tooltip effect (not visible but helps code clarity)
+            # Tooltip: btn represents day_full[i]
 
         # Options
         ttk.Checkbutton(settings, text="Use whole hours",
@@ -683,7 +685,10 @@ class OvertimeCalendarApp:
         if not dates:
             return
 
-        # Calendar grid
+        # Set calendar to start weeks on Sunday (6 = Sunday in Python's calendar)
+        calendar.setfirstweekday(calendar.SUNDAY)
+        
+        # Calendar grid - now properly aligned with Sunday as first day
         cal = calendar.monthcalendar(y, m)
         row_offset = 2
         
@@ -917,10 +922,13 @@ class OvertimeCalendarApp:
         selected_workdays = self._selected_workdays()
 
         def is_workday(dt: date) -> bool:
-            sun0 = (dt.weekday() + 1) % 7
+            # Python's weekday(): Monday=0, Sunday=6
+            # We need: Sunday=0, Monday=1, ..., Saturday=6
+            # Convert: (weekday + 1) % 7 gives us Sunday=0
+            day_index = (dt.weekday() + 1) % 7
             if not selected_workdays:
                 return True
-            return sun0 in selected_workdays
+            return day_index in selected_workdays
 
         work_dates = [dt for dt in dates if is_workday(dt)]
 
