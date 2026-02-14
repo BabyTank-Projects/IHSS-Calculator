@@ -150,7 +150,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Changelog
 
-### Version 1.0.1 (Latest)
+### Version 2.0.0 (Latest)
 - **CRITICAL FIX**: Calendar now correctly displays days under proper weekday headers
 - Fixed workday selection labels (Su, M, Tu, W, Th, F, Sa)
 - Improved calendar cell sizing and spacing
