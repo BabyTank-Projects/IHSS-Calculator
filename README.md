@@ -112,7 +112,7 @@ The executable will be created in the `dist/` folder.
 - **Excel Export**: Click "Export Excel" to save a professionally formatted timesheet
   - Beautiful color-coded headers (blue) and totals (green)
   - Alternating row colors for easy reading
-  - If you use the **Work Time Calculator**, start and end times are automatically included in the export!
+  - Start and end times are automatically included in the export!
   - Files are saved to your **Documents** folder
   - Filename includes date and pay period for easy organization
   - Opens perfectly in Microsoft Excel, Google Sheets, LibreOffice, or Numbers
