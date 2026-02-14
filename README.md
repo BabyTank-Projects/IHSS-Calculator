@@ -228,9 +228,6 @@ A: Click "More info" → "Run anyway". This is normal for unsigned executables.
 **Q: I'm running from Python source - "Missing Library" error?**  
 A: Install the required libraries: `pip install openpyxl Pillow`
 
-**Q: CSV export instead of Excel?**  
-A: If you choose CSV fallback, it still includes all your data and Work Time Calculator info, just without the colors.
-
 ---
 
 **Made with ❤️ for IHSS caregivers**
