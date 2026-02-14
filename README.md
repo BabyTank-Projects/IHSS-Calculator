@@ -176,7 +176,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - All features from v1.1.0 now fully functional in the executable
 - Users can now export beautiful Excel files with no installation required!
 
-### Version 1.1.0 - Beautiful Excel Export!
+### Version 2.1.0 - Beautiful Excel Export!
 - **NEW**: Export to Excel (.xlsx) instead of CSV with beautiful formatting
 - **NEW**: Professional color scheme - blue headers, green totals, alternating gray rows
 - **NEW**: Work Time Calculator data automatically included in exports (start/end times)
@@ -184,14 +184,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Better readability with styled columns and borders
 - Added openpyxl dependency for Excel generation
 
-### Version 1.0.2 - File Export Fix
+### Version 2.0.2 - File Export Fix
 - **CRITICAL FIX**: Export CSV and Screenshot now save to Documents folder
 - Fixed permission denied errors when running as executable
 - Files no longer try to save to protected system directories
 - Added robust fallback logic for finding writable directories
 - Better error messages showing exact save location
 
-### Version 1.0.1
+### Version 2.0.0
 - **CRITICAL FIX**: Calendar now correctly displays days under proper weekday headers
 - Fixed workday selection labels (Su, M, Tu, W, Th, F, Sa)
 - Improved calendar cell sizing and spacing
