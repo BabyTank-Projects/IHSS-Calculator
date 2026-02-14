@@ -2,7 +2,7 @@
 
 A modern, dark-themed calendar application for IHSS (In-Home Supportive Services) caregivers to manage and track their work hours efficiently.
 
-![IHSS Calendar Generator](https://i.ibb.co/bMH2Rk0/screenshot.png)
+![IHSS Calendar Generator](screenshot.png)
 
 ## Features
 
