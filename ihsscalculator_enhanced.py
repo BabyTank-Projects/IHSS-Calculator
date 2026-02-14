@@ -5,7 +5,7 @@ Overtime Hours Calendar Generator (Enhanced Version)
 - Work time calculator: input start time to calculate end times
 - Weekly totals update live
 - Auto-fill distributes authorized hours across selected workdays
-- Export CSV "timesheet_YYYY_MM_<period>.csv"
+- Export Excel "timesheet_YYYY_MM_<period>.xlsx" with professional formatting and colors
 - Help button with feature explanations
 
 DISCLAIMER:
@@ -18,9 +18,11 @@ import calendar
 import csv
 import math
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 
 # -----------------------------
@@ -36,6 +38,66 @@ def _trace_write(var, callback):
     except AttributeError:
         # Older tkinter uses trace(mode, callback)
         return var.trace("w", callback)
+
+
+def get_safe_output_directory():
+    """
+    Returns a safe directory for saving files that works both when running
+    as a script and as a PyInstaller executable.
+    
+    Priority:
+    1. User's Documents folder
+    2. User's Desktop
+    3. User's home directory
+    4. Temp directory as last resort
+    """
+    try:
+        # Try Documents folder first (most appropriate)
+        if os.name == 'nt':  # Windows
+            import winreg
+            try:
+                # Get Documents folder from Windows registry
+                key = winreg.OpenKey(
+                    winreg.HKEY_CURRENT_USER,
+                    r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
+                )
+                documents_path = winreg.QueryValueEx(key, 'Personal')[0]
+                winreg.CloseKey(key)
+                if os.path.exists(documents_path) and os.access(documents_path, os.W_OK):
+                    return documents_path
+            except:
+                pass
+            
+            # Fallback: standard Documents path
+            documents = Path.home() / "Documents"
+            if documents.exists() and os.access(documents, os.W_OK):
+                return str(documents)
+        else:  # macOS, Linux
+            documents = Path.home() / "Documents"
+            if documents.exists() and os.access(documents, os.W_OK):
+                return str(documents)
+    except:
+        pass
+    
+    # Try Desktop
+    try:
+        desktop = Path.home() / "Desktop"
+        if desktop.exists() and os.access(desktop, os.W_OK):
+            return str(desktop)
+    except:
+        pass
+    
+    # Try home directory
+    try:
+        home = Path.home()
+        if home.exists() and os.access(home, os.W_OK):
+            return str(home)
+    except:
+        pass
+    
+    # Last resort: temp directory
+    import tempfile
+    return tempfile.gettempdir()
 
 
 # -----------------------------
@@ -208,12 +270,12 @@ Enter your start time to see when you'll finish each day:
 BUTTONS
 • Clear Calendar: Removes all entered hours
 • Auto-Fill: Automatically distributes your authorized hours across selected workdays
-• Export CSV: Saves your timesheet as a spreadsheet file
+• Export Excel: Saves your timesheet as a beautifully formatted Excel file (.xlsx) with colors and professional styling. If you use the Work Time Calculator, start and end times are automatically included!
 • Screenshot: Takes a screenshot of the calendar only (useful for visual reference when filling timesheets)
 
 TIPS
 • Always verify your schedule matches actual hours worked
-• Use Export CSV to keep records of your timesheets
+• Use Export Excel to keep professional records of your timesheets with beautiful formatting
 • Use Screenshot to save a visual copy of your calendar for reference
 • The weekly maximum calculations are helpers - follow official IHSS guidelines
 • You can mix manual entry with auto-fill by clearing specific days after auto-filling
@@ -569,7 +631,7 @@ class OvertimeCalendarApp:
                   command=self.autofill,
                   style='Primary.TButton').pack(side="left", padx=(0, 10))
         
-        ttk.Button(btn_frame, text="💾 Export CSV", 
+        ttk.Button(btn_frame, text="💾 Export Excel", 
                   command=self.export_csv,
                   style='Primary.TButton').pack(side="left", padx=(0, 10))
         
@@ -1027,8 +1089,9 @@ class OvertimeCalendarApp:
             # Capture the calendar area
             screenshot = ImageGrab.grab(bbox=(x, y, x + width, y + height))
             
-            # Save to current directory
-            filepath = os.path.join(os.getcwd(), filename)
+            # Use safe output directory instead of cwd
+            output_dir = get_safe_output_directory()
+            filepath = os.path.join(output_dir, filename)
             screenshot.save(filepath, 'PNG')
             
             messagebox.showinfo(
@@ -1043,7 +1106,19 @@ class OvertimeCalendarApp:
             )
 
     def export_csv(self):
-        """Export timesheet to CSV"""
+        """Export timesheet to beautifully formatted Excel file"""
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
+        except ImportError:
+            messagebox.showerror(
+                "Missing Library",
+                "Excel export requires openpyxl library.\n\n"
+                "Install with: pip install openpyxl"
+            )
+            return
+            
         y = int(self.year_var.get())
         m = int(self.month_var.get())
         period = self.period_var.get()
@@ -1053,6 +1128,10 @@ class OvertimeCalendarApp:
 
         export_dates = self._dates_in_selected_period()
 
+        # Parse work time calculator start time if available
+        start_time_str = self.start_time_var.get().strip()
+        using_work_time = bool(start_time_str)
+        
         for dt in export_dates:
             if dt not in self.day_vars:
                 continue
@@ -1067,43 +1146,201 @@ class OvertimeCalendarApp:
                     return
 
             total_minutes += mins
+            
+            # Calculate end time if work time calculator is being used
+            end_time_str = ""
+            if using_work_time and mins > 0:
+                try:
+                    start_hours, start_minutes = parse_time(start_time_str)
+                    end_hours, end_minutes = add_time(start_hours, start_minutes, mins)
+                    end_time_str = format_time(end_hours, end_minutes)
+                except:
+                    end_time_str = ""
+            
             rows.append({
                 "date": dt.isoformat(),
                 "day_name": dt.strftime("%A"),
                 "hours_minutes": minutes_to_h_mm(mins),
                 "decimal_hours": round(mins / 60.0, 2),
+                "start_time": start_time_str if mins > 0 else "",
+                "end_time": end_time_str,
                 "minutes": mins
             })
 
-        # Filename
+        # Create Excel workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Timesheet"
+        
+        # Define colors and styles
+        header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")  # Dark blue
+        header_font = Font(name='Arial', size=12, bold=True, color="FFFFFF")  # White text
+        
+        title_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")  # Medium blue
+        title_font = Font(name='Arial', size=14, bold=True, color="FFFFFF")
+        
+        total_fill = PatternFill(start_color="70AD47", end_color="70AD47", fill_type="solid")  # Green
+        total_font = Font(name='Arial', size=11, bold=True, color="FFFFFF")
+        
+        alt_row_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")  # Light gray
+        
+        center_align = Alignment(horizontal="center", vertical="center")
+        left_align = Alignment(horizontal="left", vertical="center")
+        
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Title section
+        ws.merge_cells('A1:G1')
+        title_cell = ws['A1']
+        title_cell.value = "⏰ IHSS HOURS TIMESHEET"
+        title_cell.font = title_font
+        title_cell.fill = title_fill
+        title_cell.alignment = center_align
+        
+        # Info section
+        ws['A3'] = "Year:"
+        ws['B3'] = y
+        ws['B3'].font = Font(bold=True)
+        
+        ws['A4'] = "Month:"
+        ws['B4'] = calendar.month_name[m]
+        ws['B4'].font = Font(bold=True)
+        
+        ws['A5'] = "Pay Period:"
+        ws['B5'] = period
+        ws['B5'].font = Font(bold=True)
+        
+        # Determine which columns to show
+        start_row = 7
+        col_headers = ["Date", "Day", "Hours (H:MM)", "Decimal Hours"]
+        if using_work_time:
+            col_headers.extend(["Start Time", "End Time"])
+        
+        # Column headers
+        for col_idx, header in enumerate(col_headers, start=1):
+            cell = ws.cell(row=start_row, column=col_idx)
+            cell.value = header
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = center_align
+            cell.border = thin_border
+        
+        # Data rows
+        current_row = start_row + 1
+        for idx, r in enumerate(rows):
+            # Apply alternating row colors
+            row_fill = alt_row_fill if idx % 2 == 1 else None
+            
+            # Date
+            cell = ws.cell(row=current_row, column=1, value=r["date"])
+            cell.alignment = center_align
+            cell.border = thin_border
+            if row_fill:
+                cell.fill = row_fill
+            
+            # Day name
+            cell = ws.cell(row=current_row, column=2, value=r["day_name"])
+            cell.alignment = left_align
+            cell.border = thin_border
+            if row_fill:
+                cell.fill = row_fill
+            
+            # Hours (H:MM)
+            cell = ws.cell(row=current_row, column=3, value=r["hours_minutes"])
+            cell.alignment = center_align
+            cell.border = thin_border
+            if row_fill:
+                cell.fill = row_fill
+            
+            # Decimal hours
+            cell = ws.cell(row=current_row, column=4, value=r["decimal_hours"])
+            cell.alignment = center_align
+            cell.border = thin_border
+            if row_fill:
+                cell.fill = row_fill
+            
+            # Work time columns if applicable
+            if using_work_time:
+                # Start time
+                cell = ws.cell(row=current_row, column=5, value=r["start_time"])
+                cell.alignment = center_align
+                cell.border = thin_border
+                if row_fill:
+                    cell.fill = row_fill
+                
+                # End time
+                cell = ws.cell(row=current_row, column=6, value=r["end_time"])
+                cell.alignment = center_align
+                cell.border = thin_border
+                if row_fill:
+                    cell.fill = row_fill
+            
+            current_row += 1
+        
+        # Total row
+        current_row += 1
+        total_col = 3 if not using_work_time else 4
+        
+        cell = ws.cell(row=current_row, column=1, value="TOTAL")
+        cell.font = total_font
+        cell.fill = total_fill
+        cell.alignment = center_align
+        cell.border = thin_border
+        
+        ws.merge_cells(f'A{current_row}:B{current_row}')
+        
+        cell = ws.cell(row=current_row, column=3, value=minutes_to_h_mm(total_minutes))
+        cell.font = total_font
+        cell.fill = total_fill
+        cell.alignment = center_align
+        cell.border = thin_border
+        
+        cell = ws.cell(row=current_row, column=4, value=round(total_minutes / 60.0, 2))
+        cell.font = total_font
+        cell.fill = total_fill
+        cell.alignment = center_align
+        cell.border = thin_border
+        
+        if using_work_time:
+            for col in [5, 6]:
+                cell = ws.cell(row=current_row, column=col, value="")
+                cell.fill = total_fill
+                cell.border = thin_border
+        
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 12
+        ws.column_dimensions['B'].width = 15
+        ws.column_dimensions['C'].width = 15
+        ws.column_dimensions['D'].width = 15
+        if using_work_time:
+            ws.column_dimensions['E'].width = 12
+            ws.column_dimensions['F'].width = 12
+        
+        # Filename - change to .xlsx
         safe_period = period.replace(" ", "_").replace("(", "").replace(")", "").replace("-", "_").replace("/", "_")
-        filename = f"timesheet_{y}_{m:02d}_{safe_period}.csv"
-        filepath = os.path.join(os.getcwd(), filename)
+        filename = f"timesheet_{y}_{m:02d}_{safe_period}.xlsx"
+        
+        # Use safe output directory
+        output_dir = get_safe_output_directory()
+        filepath = os.path.join(output_dir, filename)
 
-        # Write CSV
+        # Save Excel file
         try:
-            with open(filepath, "w", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(["IHSS Hours Calendar - Timesheet Export"])
-                writer.writerow(["Year", y])
-                writer.writerow(["Month", calendar.month_name[m]])
-                writer.writerow(["Pay Period", period])
-                writer.writerow([])
-                writer.writerow(["Date", "Day", "Hours (H:MM)", "Decimal Hours", "Minutes"])
-                for r in rows:
-                    writer.writerow([r["date"], r["day_name"], r["hours_minutes"], 
-                                   r["decimal_hours"], r["minutes"]])
-                writer.writerow([])
-                writer.writerow(["TOTAL", "", minutes_to_h_mm(total_minutes), 
-                               round(total_minutes / 60.0, 2), total_minutes])
+            wb.save(filepath)
         except OSError as e:
             messagebox.showerror("Export Failed", f"Could not write file:\n{filepath}\n\n{e}")
             return
 
         messagebox.showinfo(
             "Export Complete",
-            f"✅ Saved CSV:\n{filepath}\n\n"
-            f"Total Hours: {minutes_to_h_mm(total_minutes)}"
+            f"✅ Saved Excel timesheet:\n{filepath}\n\n"
+            f"Total Hours: {minutes_to_h_mm(total_minutes)}\n\n"
+            f"📊 Professional formatting with colors applied!"
         )
 
 
